@@ -47,10 +47,10 @@ mod naive_time_serialize {
     use serde::{self, Serializer};
     pub fn serialize<S>(time: &Option<NaiveTime>, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
 
-        let s = match time {
-            Some(time) => time.format("%H:%M:%S").to_string(),
-            None => "null".to_string()
+        let s: u32 = match time {
+            Some(time) => time.format("%H%M").to_string().parse().unwrap(),
+            None => 0
         };
-        serializer.serialize_str(&s)
+        serializer.serialize_u32(s)
     }
 }

@@ -21,7 +21,7 @@ async fn main() {
     let mut extractor = extractor::Extractor::new_default();
     let db_url: String = fs::read_to_string("databaseUrl.secret").unwrap();
     let mut firebase = Firebase::new("serviceAccountKey.json.secret", db_url);
-    let mut sleeper = Sleeper::new(10, 10, None);
+    let mut sleeper = Sleeper::new(5 * 60, 10 * 60, None);
 
     loop {
         let scrape_result = extractor.scrape().await;
