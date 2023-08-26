@@ -53,7 +53,7 @@ async fn main() {
         let uk_now = uk_datetime_now::now();
         let key = uk_now.format("%H%M").to_string();
         let occupancy_data = prepare_occupancy_json(&key, occupancy);
-        let latest_occupancy_location = format!("rs_data/data/latest/{}",uk_now.format("%Y-%m-%d"));
+        let latest_occupancy_location = "rs_data/data/latest/data";
         let latest_schedule_location = "rs_data/data/latest/schedule";
 
         if firebase.handle_auth_token().await.is_err() {
@@ -62,12 +62,12 @@ async fn main() {
             continue;
         }
 
-
+        let latest_occupancy_data = prepare_occupancy_json(&uk_now.format("Y-%m-%d-%H-%M").to_string(), occupancy);
 
         let (occupancy_location, schedule_location) = prepare_location(uk_now);
         let data_insert = firebase.update(occupancy_location, &occupancy_data);
         let schedule_insert = firebase.set(schedule_location, &schedule_data);
-        let latest_occupancy_set = firebase.set(latest_occupancy_location, &occupancy_data);
+        let latest_occupancy_set = firebase.set(latest_occupancy_location.to_string(), &latest_occupancy_data);
         let latest_schedule_set = firebase.set(latest_schedule_location.to_string(), &schedule_data);
 
 
