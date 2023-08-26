@@ -2,6 +2,7 @@ mod core_functions;
 mod web_scraper;
 mod firebase;
 mod sleeper;
+mod knn_regressor;
 
 use std::fs;
 
@@ -93,9 +94,6 @@ fn prepare_location(now: DateTime<Tz>) -> (String, String) {
     let weekday_num = weekday_matcher::get_num(now.weekday()).to_string();
     let occupancy_location = format!("rs_data/data/{}/{}",start_of_week, weekday_num);
     let schedule_location = format!("rs_data/data/schedule/{}", start_of_week);
-
-    // let key = now.format("%H%M").to_string();
-    // let data = prepare_json_occupancy(&key ,occupancy);
 
     (occupancy_location, schedule_location) 
 }

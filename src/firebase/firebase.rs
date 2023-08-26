@@ -74,6 +74,18 @@ impl Firebase {
         Some((token, exp))
     }
 
+    fn set_jwt(&mut self) {
+        let (jwt, exp) = match Self::construct_jwt(&self.service_key) {
+            Some(key) => key,
+            None => {
+                println!("Could not construct JWT. Check Key");
+                std::process::exit(1);
+            }
+        };
+        self.jwt = jwt;
+        self.exp = exp;
+    }
+
     async fn set_auth_token(&mut self) -> Result<(),()> {
         let response = match self.client
             .post(self.service_key.token_url())
@@ -101,6 +113,7 @@ impl Firebase {
             Some(token) => Some(token.to_string()),
             None => {
                 error_logger("Access Token as_str error").await;
+                dbg!(json_res);
                 None
             }
         };
@@ -113,6 +126,8 @@ impl Firebase {
     pub async fn handle_auth_token(&mut self) -> Result<(),()> {
         let now = chrono::Utc::now().timestamp();
         if self.exp < now || self.auth_token.is_none() {
+            // Generate new jwt
+            self.set_jwt();
             // get new key
             if self.set_auth_token().await.is_err() {
                 return Err(());
@@ -155,5 +170,20 @@ impl Firebase {
             };
         // dbg!(response.text().await.unwrap());
         println!("{} {}", response.status(), location);
-    }   
+    }
+
+    pub async fn get(&self, location: String) -> Option<String> {
+        let auth_token = &self.auth_token.as_ref().unwrap();
+        let response = match self.client
+        .get(format!("{}.json?access_token={}", location, auth_token))
+            .send()
+            .await {
+                Ok(data) => data,
+                Err(_) => {
+                    error_logger("Get Error").await;
+                    return None;
+                }
+            };
+        Some(response.text().await.unwrap().to_string())
+    }
 }
