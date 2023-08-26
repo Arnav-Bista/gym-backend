@@ -13,7 +13,7 @@ use serde_json::json;
 use sleeper::Sleeper;
 use web_scraper::extractor;
 
-use tokio::{self, join, spawn};
+use tokio::{self, join};
 
 
 #[tokio::main]
@@ -21,7 +21,7 @@ async fn main() {
     let mut extractor = extractor::Extractor::new_default();
     let db_url: String = fs::read_to_string("databaseUrl.secret").unwrap();
     let mut firebase = Firebase::new("serviceAccountKey.json.secret", db_url);
-    let mut sleeper = Sleeper::new(5 * 60, 10 * 60, None);
+    let mut sleeper = Sleeper::new(5 * 60, 5 * 60,None);
 
     loop {
         let scrape_result = extractor.scrape().await;
@@ -36,12 +36,19 @@ async fn main() {
             sleeper.async_sleep_error().await;
             continue;
         }
+        
 
         let schedule = schedule.expect("Unexpected Error");
         let occupancy = occupancy.expect("Unexpected Error");
 
         let schedule_data = json!(schedule).to_string();
         sleeper.set_schedule(schedule);
+
+        if !sleeper.is_standard_interval().expect("Unexpected Error - Unwrap on Sleeper Schedule") {
+            println!("Too early");
+            sleeper.sleep().await;
+            continue;
+        }
 
         let uk_now = uk_datetime_now::now();
         let key = uk_now.format("%H%M").to_string();

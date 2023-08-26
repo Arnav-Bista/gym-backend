@@ -95,8 +95,18 @@ impl Firebase {
                 .as_str()
         ).expect("Unexpected response json parse error");
 
-        self.auth_token = Some(json_res["access_token"].as_str().expect("Unexpected error - unwrap on access token")
-            .to_string());
+        // self.auth_token = Some(json_res["access_token"].as_str().expect("Unexpected error - unwrap on access token")
+        //     .to_string());
+        self.auth_token = match json_res["access_token"].as_str() {
+            Some(token) => Some(token.to_string()),
+            None => {
+                error_logger("Access Token as_str error").await;
+                None
+            }
+        };
+        if self.auth_token.is_none() {
+            return Err(());
+        }
         Ok(())
     }
 

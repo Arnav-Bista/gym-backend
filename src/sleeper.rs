@@ -100,4 +100,17 @@ impl Sleeper {
         println!("Sleeping {} seconds", self.error_time);
         tokio::time::sleep(std::time::Duration::new(self.error_time, 0)).await;
     }
+
+    pub fn is_standard_interval(&self) -> Option<bool> {
+        let now = uk_datetime_now::now();
+        let now_time = now.time();
+        let weekday = now.weekday();
+        let schedule = &self.schedule.as_ref()?;
+        let timing: &Timing = schedule.get_timings_from_weekday(weekday);
+
+        let opening_time = timing.get_opening()?;
+        let closing_time = timing.get_closing()?;
+
+        Some(opening_time <= now_time && now_time < closing_time)
+    }
 }
