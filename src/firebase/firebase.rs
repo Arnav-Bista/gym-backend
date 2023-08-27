@@ -175,12 +175,13 @@ impl Firebase {
     pub async fn get(&self, location: String) -> Option<String> {
         let auth_token = &self.auth_token.as_ref().unwrap();
         let response = match self.client
-        .get(format!("{}.json?access_token={}", location, auth_token))
+        .get(format!("{}{}.json?access_token={}&print=pretty&orderBy=\"$key\"",self.db_url, location, auth_token))
             .send()
             .await {
                 Ok(data) => data,
-                Err(_) => {
+                Err(err) => {
                     error_logger("Get Error").await;
+                    println!("{}",err);
                     return None;
                 }
             };

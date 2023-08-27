@@ -10,6 +10,8 @@ use chrono::{Datelike, DateTime};
 use chrono_tz::Tz;
 use core_functions::{uk_datetime_now, get_start_of_week, weekday_matcher, error_logger::error_logger};
 use firebase::firebase::Firebase;
+use knn_regressor::data::Data;
+
 use serde_json::json;
 use sleeper::Sleeper;
 use web_scraper::extractor;
@@ -70,14 +72,16 @@ async fn main() {
         let schedule_insert = firebase.set(schedule_location, &schedule_data);
         let latest_occupancy_set = firebase.set(latest_occupancy_location.to_string(), &latest_occupancy_data);
         let latest_schedule_set = firebase.set(latest_schedule_location.to_string(), &schedule_data);
-
-
+        
+        let data = Data::new(&firebase, 3).await;
+        println!("{:?}",data.get_data()[0]);
+        
         join!(
             sleeper.sleep(),
-            data_insert,
-            schedule_insert,
-            latest_schedule_set,
-            latest_occupancy_set,
+        //     data_insert,
+        //     schedule_insert,
+        //     latest_schedule_set,
+        //     latest_occupancy_set,
         );
     }
 
