@@ -36,13 +36,10 @@ impl Data {
                 error_logger("Unexpected Error").await;
                 std::process::exit(1);
             }
-            // println!("{}",json_data.get("0").is_some());
-            // dbg!(data);
-            // println!("{}",fetch);
         };
         Self {
             data,
-            for_date: now.to_string()
+            for_date: get_start_of_week::get(now).to_string()
         }
     }
     
@@ -84,9 +81,7 @@ impl Data {
                 key.parse().unwrap(),
                 val.as_u64().unwrap() as u16
             ));
-            // println!("{} {}", key,value);
         }
-        // println!("{:?}", data);
         data
     }
 
@@ -94,5 +89,7 @@ impl Data {
         &self.data
     }
 
-    // pub fn from_vec(data: Vec<)
+    pub fn get_for_date(&self) -> &String {
+        &self.for_date
+    }
 }

@@ -113,4 +113,12 @@ impl Sleeper {
 
         Some(opening_time <= now_time && now_time < closing_time)
     }
+
+    pub fn get_frequency(&self) -> u64 {
+        self.frequency
+    }
+
+    pub fn get_schedule(&self) -> &Schedule {
+        &self.schedule.as_ref().unwrap()
+    }
 }
