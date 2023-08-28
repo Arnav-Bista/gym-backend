@@ -131,7 +131,7 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
     }
 
     data.set_predicted_date(now_date);
-    data.write_to_file(path);
+    data.write_to_file(path).await;
 
 
     let regressor = Regressor::new(data, k);

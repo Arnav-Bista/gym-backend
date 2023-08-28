@@ -45,12 +45,12 @@ impl Regressor {
         }
 
         // Average Occupancy of k nearest
-        let mut total = 0;
+        let mut total: u64 = 0;
         for ele in k_nearest {
-            total += ele.1;
+            total += ele.1 as u64;
         }
 
-        total / self.k as u16
+        (total / self.k as u64) as u16
     }
 
 }
