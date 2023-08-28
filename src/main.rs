@@ -144,7 +144,7 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
 
     let predictions = regressor.predict_range(start, end, frequency as u16, weekday_number);
 
-    let location = format!("rs_data/prediction/{}/{}", now_date.to_string(),weekday_number);
+    let location = format!("rs_data/prediction/{}/{}", get_start_of_week::get(now_date).to_string(),weekday_number);
         
     let mut map: HashMap<String,u16> = HashMap::new();
     
