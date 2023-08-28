@@ -1,4 +1,6 @@
-use chrono::{NaiveDateTime, Duration, NaiveDate};
+use std::str::FromStr;
+
+use chrono::{Duration, NaiveDate};
 use serde::{Serialize,Deserialize};
 use serde_json::{self, Value};
 use tokio::fs;
@@ -9,6 +11,7 @@ use crate::{firebase::firebase::Firebase, core_functions::{uk_datetime_now, get_
 pub struct Data {
     data: Vec<Vec<(u16, u16)>>,
     for_date: String,
+    predicted_date: String,
 }
 
 impl Data {
@@ -17,7 +20,11 @@ impl Data {
         Some(serde_json::from_str(&data).ok()?)
     }
 
-    pub async fn new(firebase: &Firebase, k: usize) -> Self {
+    pub async fn write_to_file(&self, path: &str) {
+        let _ = fs::write(path, serde_json::to_string(&self).unwrap()).await;
+    }
+
+    pub async fn new(firebase: &Firebase, k: usize, date: String) -> Self {
         let mut data: Vec<Vec<(u16,u16)>> = Vec::with_capacity(7);
         let now = uk_datetime_now::now().date_naive();
         for week in 1..k + 1 {
@@ -39,7 +46,8 @@ impl Data {
         };
         Self {
             data,
-            for_date: get_start_of_week::get(now).to_string()
+            for_date: get_start_of_week::get(now).to_string(),
+            predicted_date: date
         }
     }
     
@@ -83,6 +91,14 @@ impl Data {
             ));
         }
         data
+    }
+
+    pub fn set_predicted_date(&mut self, date: NaiveDate) {
+        self.predicted_date = date.to_string();
+    }
+
+    pub fn get_predicted_date(&self) -> NaiveDate {
+        NaiveDate::from_str(&self.predicted_date).unwrap()
     }
 
     pub fn get_data(&self) -> &Vec<Vec<(u16,u16)>>{

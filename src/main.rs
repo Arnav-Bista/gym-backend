@@ -73,16 +73,14 @@ async fn main() {
         let latest_occupancy_set = firebase.set(latest_occupancy_location.to_string(), &latest_occupancy_data);
         let latest_schedule_set = firebase.set(latest_schedule_location.to_string(), &schedule_data);
         
-        // let data = Data::new(&firebase, 3).await;
-        // println!("{:?}",data.get_data()[0]);
         
         join!(
             sleeper.sleep(),
-            make_predictions(true, &firebase, sleeper.get_schedule(), sleeper.get_frequency() / 60)
-        //     data_insert,
-        //     schedule_insert,
-        //     latest_schedule_set,
-        //     latest_occupancy_set,
+            make_predictions(&firebase, sleeper.get_schedule(), sleeper.get_frequency() / 60),
+            data_insert,
+            schedule_insert,
+            latest_schedule_set,
+            latest_occupancy_set,
         );
     }
 
@@ -103,27 +101,38 @@ fn prepare_location(now: DateTime<Tz>) -> (String, String) {
     (occupancy_location, schedule_location) 
 }
 
-async fn make_predictions(activate: bool, firebase: &Firebase, schedule: &Schedule, frequency: u64) {
-    if !activate {
-        return;
-    }
-    
+async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u64) {
     let k = 3;
+    let path = "knn_regressor.data";
 
     let now = uk_datetime_now::now();
     let now_date: NaiveDate = now.date_naive();
+    let mut new = false;
 
-    let data = match Data::from_file("knn_regressor.data").await {
+    let mut data = match Data::from_file(path).await {
         Some(data) => {
-            if data.get_for_date() != &now_date.to_string() {
-                Data::new(firebase, k).await
+            if data.get_for_date() != &get_start_of_week::get(now_date).to_string() {
+                // New Week
+                new = true;
+                Data::new(firebase, k, now_date.to_string()).await
             }
             else {
                 data
             }
         }
-        None => Data::new(firebase, k).await
+        None => {
+            new = true;
+            Data::new(firebase, k, now_date.to_string()).await
+        }
     };
+    
+    if !(data.get_predicted_date() < now_date || new) {
+        return;
+    }
+
+    data.set_predicted_date(now_date);
+    data.write_to_file(path);
+
 
     let regressor = Regressor::new(data, k);
     let weekday_number = weekday_matcher::get_num(now.weekday());
@@ -145,8 +154,6 @@ async fn make_predictions(activate: bool, firebase: &Firebase, schedule: &Schedu
 
     let data = serde_json::to_string(&map).unwrap();
     firebase.set(location, &data).await;
-    // println!("{}",data);
-    
 }
 
 
