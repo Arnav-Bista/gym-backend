@@ -17,7 +17,7 @@ impl Regressor {
         let item_count = (end - start) / frequency;
         let mut result: Vec<(u16,u16)> = Vec::with_capacity(item_count as usize);
 
-        for i in 0..item_count {
+        for i in 0..item_count + 1 {
             let time = start + i * frequency;
             result.push((time, self.predict_one(week_day, time)));
         }
