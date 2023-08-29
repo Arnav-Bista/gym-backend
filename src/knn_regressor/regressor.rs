@@ -26,10 +26,16 @@ impl Regressor {
 
         result
     }
-
+        
     pub fn predict_one(&self, week_day: usize, time: u16) -> u16 {
-        let mut k_nearest: Vec<(u16,u16)> = vec![(u16::MAX,u16::MAX); self.k];
+        // u16 limit is 65536
+        let mut k_nearest: Vec<(u16,u16)> = Vec::with_capacity(self.k);
+
         for day_data in &self.data.get_data()[week_day] {
+            if k_nearest.len() <= self.k {
+                k_nearest.push(*day_data);
+                continue;
+            }
             let distance = day_data.0.abs_diff(time);
             let mut max_index = 0;
             let mut swap = false;
@@ -45,12 +51,12 @@ impl Regressor {
         }
 
         // Average Occupancy of k nearest
-        let mut total: u64 = 0;
+        let mut total: u16 = 0;
         for ele in k_nearest {
-            total += ele.1 as u64;
+            total += ele.1;
         }
 
-        (total / self.k as u64) as u16
+        total / k_nearest.len() as u16
     }
 
 }
