@@ -1,11 +1,9 @@
-use std::ops::Add;
-
 use chrono::{Datelike, Duration, NaiveTime, Timelike};
 
 use crate::web_scraper::{schedule::Schedule, timing::Timing};
 use crate::core_functions::{error_logger::error_logger, uk_datetime_now};
 
-pub struct leeper {
+pub struct Sleeper {
     frequency: u64,
     error_time: u64,
     schedule: Option<Schedule>,

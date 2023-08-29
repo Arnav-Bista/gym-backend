@@ -4,7 +4,7 @@ use regex::Regex;
 
 use reqwest::{Client, RequestBuilder, Method};
 
-use crate::core_functions::error_logger::{self, error_logger};
+use crate::core_functions::error_logger::error_logger;
 
 use super::schedule::Schedule;
 

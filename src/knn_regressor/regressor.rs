@@ -1,5 +1,3 @@
-use crate::core_functions::weekday_matcher;
-
 use super::data::Data;
 
 pub struct Regressor {
@@ -52,7 +50,7 @@ impl Regressor {
 
         // Average Occupancy of k nearest
         let mut total: u16 = 0;
-        for ele in k_nearest {
+        for ele in &k_nearest {
             total += ele.1;
         }
 

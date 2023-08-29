@@ -4,7 +4,7 @@ mod firebase;
 mod sleeper;
 mod knn_regressor;
 
-use std::{fs, collections::{BTreeMap, HashMap}};
+use std::{fs, collections::HashMap};
 
 use chrono::{Datelike, DateTime, NaiveDate};
 use chrono_tz::Tz;
@@ -14,7 +14,7 @@ use knn_regressor::{data::Data, regressor::Regressor};
 
 use serde_json::json;
 use sleeper::Sleeper;
-use web_scraper::{extractor, timing::Timing, schedule::Schedule};
+use web_scraper::{extractor, schedule::Schedule};
 
 use tokio::{self, join};
 
@@ -73,7 +73,7 @@ async fn main() {
         let latest_occupancy_set = firebase.set(latest_occupancy_location.to_string(), &latest_occupancy_data);
         let latest_schedule_set = firebase.set(latest_schedule_location.to_string(), &schedule_data);
         
-        
+        // Make these concurrent. join! does not do them in parallel! 
         join!(
             sleeper.sleep(),
             make_predictions(&firebase, sleeper.get_schedule(), sleeper.get_frequency() / 60),

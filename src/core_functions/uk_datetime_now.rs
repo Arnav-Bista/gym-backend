@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, Local, TimeZone, Timelike};
+use chrono::{DateTime, Local};
 use chrono_tz::Tz;
 
 pub fn now() -> DateTime<Tz> {

@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local};
+use chrono::Local;
 use tokio::{fs, io::AsyncWriteExt};
 
 pub async fn error_logger(message: &str) {
