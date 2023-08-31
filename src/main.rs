@@ -65,7 +65,7 @@ async fn main() {
             continue;
         }
 
-        let latest_occupancy_data = prepare_occupancy_json(&uk_now.format("%Y%m%dT%H%M%S").to_string(), occupancy);
+        let latest_occupancy_data = prepare_occupancy_json(&uk_now.format("%Y-%m-%d-%H-%M").to_string(), occupancy);
 
         let (occupancy_location, schedule_location) = prepare_location(uk_now);
         let data_insert = firebase.update(occupancy_location, &occupancy_data);
