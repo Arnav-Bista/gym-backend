@@ -67,7 +67,7 @@ impl Sleeper {
             let diff = opening_time - now_time;
             Self::async_sleep(diff).await;
         }
-        else if opening_time > closing_time {
+        else if now_time > closing_time {
             // Too late
             let tomorrow_opening_time = schedule.get_timings_from_weekday_tomorrow(weekday);
             if !tomorrow_opening_time.is_open() {
