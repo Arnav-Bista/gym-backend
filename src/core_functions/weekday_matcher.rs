@@ -11,3 +11,16 @@ pub fn get_num(weekday: Weekday) -> usize {
         Weekday::Sun => 6
     }
 }
+
+pub fn get_weekday(number: usize) -> Weekday {
+    match number {
+        0 => Weekday::Mon,
+        1 => Weekday::Tue,
+        2 => Weekday::Wed,
+        3 => Weekday::Thu,
+        4 => Weekday::Fri,
+        5 => Weekday::Sat,
+        6 => Weekday::Sun,
+        _ => Weekday::Mon
+    }
+}

@@ -109,7 +109,7 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
     let now_date: NaiveDate = now.date_naive();
     let mut new = false;
 
-    let mut data = match Data::from_file(path).await {
+    let data = match Data::from_file(path).await {
         Some(data) => {
             if data.get_for_date() != &get_start_of_week::get(now_date).to_string() {
                 // New Week
@@ -125,35 +125,35 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
             Data::new(firebase, k, now_date.to_string()).await
         }
     };
-    
-    if !(data.get_predicted_date() < now_date || new) {
+
+    if !new {
         return;
     }
 
-    data.set_predicted_date(now_date);
     data.write_to_file(path).await;
 
 
     let regressor = Regressor::new(data, k);
-    let weekday_number = weekday_matcher::get_num(now.weekday());
 
-    let timings = schedule.get_timings_from_weekday(now.weekday());
+    // Predict for the entire week
+    for i in 0..7 {
+        let timings = schedule.get_timings_from_weekday(weekday_matcher::get_weekday(i));
+        let start: u16 = timings.get_opening().unwrap().format("%H%M").to_string().parse().unwrap();
+        let end: u16 = timings.get_closing().unwrap().format("%H%M").to_string().parse().unwrap();
 
-    let start: u16 = timings.get_opening().unwrap().format("%H%M").to_string().parse().unwrap();
-    let end: u16 = timings.get_closing().unwrap().format("%H%M").to_string().parse().unwrap();
+        let predictions = regressor.predict_range(start, end, frequency as u16, i);
 
-    let predictions = regressor.predict_range(start, end, frequency as u16, weekday_number);
-
-    let location = format!("rs_data/prediction/{}/{}", get_start_of_week::get(now_date).to_string(),weekday_number);
+        let location = format!("rs_data/prediction/{}/{}", get_start_of_week::get(now_date).to_string(), i);
+            
+        let mut map: HashMap<String,u16> = HashMap::new();
         
-    let mut map: HashMap<String,u16> = HashMap::new();
-    
-    for (key, value) in predictions {
-        map.insert(key.to_string(), value);
-    }
+        for (key, value) in predictions {
+            map.insert(key.to_string(), value);
+        }
 
-    let data = serde_json::to_string(&map).unwrap();
-    firebase.set(location, &data).await;
+        let data = serde_json::to_string(&map).unwrap();
+        firebase.set(location, &data).await;
+    }
 }
 
 

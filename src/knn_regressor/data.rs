@@ -11,7 +11,6 @@ use crate::{firebase::firebase::Firebase, core_functions::{uk_datetime_now, get_
 pub struct Data {
     data: Vec<Vec<(u16, u16)>>,
     for_date: String,
-    predicted_date: String,
 }
 
 impl Data {
@@ -47,7 +46,6 @@ impl Data {
         Self {
             data,
             for_date: get_start_of_week::get(now).to_string(),
-            predicted_date: date
         }
     }
     
@@ -92,15 +90,6 @@ impl Data {
         }
         data
     }
-
-    pub fn set_predicted_date(&mut self, date: NaiveDate) {
-        self.predicted_date = date.to_string();
-    }
-
-    pub fn get_predicted_date(&self) -> NaiveDate {
-        NaiveDate::from_str(&self.predicted_date).unwrap()
-    }
-
     pub fn get_data(&self) -> &Vec<Vec<(u16,u16)>>{
         &self.data
     }
