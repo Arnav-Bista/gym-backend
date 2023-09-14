@@ -23,11 +23,10 @@ impl Data {
         let _ = fs::write(path, serde_json::to_string(&self).unwrap()).await;
     }
 
-    pub async fn new(firebase: &Firebase, k: usize, date: String) -> Self {
+    pub async fn new(firebase: &Firebase, k: usize, date: NaiveDate) -> Self {
         let mut data: Vec<Vec<(u16,u16)>> = Vec::with_capacity(7);
-        let now = uk_datetime_now::now().date_naive();
         for week in 1..k + 1 {
-            let week_date: NaiveDate = now - Duration::days(7 * week as i64);
+            let week_date: NaiveDate = date - Duration::days(7 * week as i64);
             let week_date = get_start_of_week::get(week_date);
             let key = week_date.to_string();
             let fetch = firebase.get(format!("rs_data/data/{}",key)).await.unwrap();
@@ -45,7 +44,7 @@ impl Data {
         };
         Self {
             data,
-            for_date: get_start_of_week::get(now).to_string(),
+            for_date: get_start_of_week::get(date).to_string(),
         }
     }
     

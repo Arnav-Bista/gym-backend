@@ -6,11 +6,11 @@ mod knn_regressor;
 
 use std::{fs, collections::HashMap};
 
-use chrono::{Datelike, DateTime, NaiveDate};
+use chrono::{Datelike, DateTime, NaiveDate, Duration, Weekday};
 use chrono_tz::Tz;
 use core_functions::{uk_datetime_now, get_start_of_week, weekday_matcher, error_logger::error_logger};
 use firebase::firebase::Firebase;
-use knn_regressor::{data::Data, regressor::Regressor};
+use knn_regressor::{data::Data, regressor::{Regressor, self}};
 
 use serde_json::json;
 use sleeper::Sleeper;
@@ -39,7 +39,7 @@ async fn main() {
             sleeper.async_sleep_error().await;
             continue;
         }
-        
+
 
         let schedule = schedule.expect("Unexpected Error");
         let occupancy = occupancy.expect("Unexpected Error");
@@ -72,7 +72,7 @@ async fn main() {
         let schedule_insert = firebase.set(schedule_location, &schedule_data);
         let latest_occupancy_set = firebase.set(latest_occupancy_location.to_string(), &latest_occupancy_data);
         let latest_schedule_set = firebase.set(latest_schedule_location.to_string(), &schedule_data);
-        
+
         // Make these concurrent. join! does not do them in parallel! 
         join!(
             sleeper.sleep(),
@@ -108,13 +108,17 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
     let now = uk_datetime_now::now();
     let now_date: NaiveDate = now.date_naive();
     let mut new = false;
+    
+    if now.weekday() == Weekday::Sat {
+        predict_monday(firebase, k, schedule, frequency, now_date).await;
+    }
 
     let data = match Data::from_file(path).await {
         Some(data) => {
             if data.get_for_date() != &get_start_of_week::get(now_date).to_string() {
                 // New Week
                 new = true;
-                Data::new(firebase, k, now_date.to_string()).await
+                Data::new(firebase, k, now_date).await
             }
             else {
                 data
@@ -122,7 +126,7 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
         }
         None => {
             new = true;
-            Data::new(firebase, k, now_date.to_string()).await
+            Data::new(firebase, k, now_date).await
         }
     };
 
@@ -144,9 +148,9 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
         let predictions = regressor.predict_range(start, end, frequency as u16, i);
 
         let location = format!("rs_data/prediction/{}/{}", get_start_of_week::get(now_date).to_string(), i);
-            
+
         let mut map: HashMap<String,u16> = HashMap::new();
-        
+
         for (key, value) in predictions {
             map.insert(key.to_string(), value);
         }
@@ -156,4 +160,59 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
     }
 }
 
+
+async fn predict_monday(firebase: &Firebase, k: usize, schedule: &Schedule, frequency: u64, date: NaiveDate) {
+    // This is for that +1 Edge case.
+    // This is indeed inefficient as it will be overwritten when monday hits.
+    // But this is so much simpler than doing Today + Tomorrow prediction (due to edge cases)
+    let date = date + Duration::days(7);
+    let path = "knn_regressor_tomorrow.data";
+    let mut new = false;
+    let data = match Data::from_file(path).await {
+        Some(data) => {
+            if data.get_for_date() != &get_start_of_week::get(date).to_string() {
+                // New Week
+                new = true;
+                Data::new(firebase, k, date).await
+            }
+            else {
+                data
+            }
+        }
+        None => {
+            new = true;
+            Data::new(firebase, k, date).await
+        }
+    };
+
+    if !new {
+        return;
+    }
+
+    data.write_to_file(path).await;
+
+    let regressor = Regressor::new(data, k);
+
+    let weekday = weekday_matcher::get_num(date.weekday());
+
+    let timings = schedule.get_timings_from_weekday(date.weekday());
+    let start: u16 = timings.get_opening().unwrap().format("%H%M").to_string().parse().unwrap();
+    let end: u16 = timings.get_closing().unwrap().format("%H%M").to_string().parse().unwrap();
+
+    let predictions = regressor.predict_range(start, end, frequency as u16, weekday);
+
+    let location = format!("rs_data/prediction/{}/{}", get_start_of_week::get(date).to_string(), weekday);
+
+    let mut map: HashMap<String,u16> = HashMap::new();
+
+    for (key, value) in predictions {
+        map.insert(key.to_string(), value);
+    }
+
+    let data = serde_json::to_string(&map).unwrap();
+    firebase.set(location, &data).await;
+
+
+
+}
 
