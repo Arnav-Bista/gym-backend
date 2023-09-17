@@ -109,7 +109,7 @@ async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u
     let now_date: NaiveDate = now.date_naive();
     let mut new = false;
     
-    if now.weekday() == Weekday::Sat {
+    if now.weekday() == Weekday::Sun {
         predict_monday(firebase, k, schedule, frequency, now_date).await;
     }
 
@@ -201,7 +201,7 @@ async fn predict_monday(firebase: &Firebase, k: usize, schedule: &Schedule, freq
 
     let predictions = regressor.predict_range(start, end, frequency as u16, weekday);
 
-    let location = format!("rs_data/prediction/{}/{}", get_start_of_week::get(date).to_string(), weekday);
+    let location = format!("rs_data/prediction/{}/{}", get_start_of_week::get(date).to_string(), 0);
 
     let mut map: HashMap<String,u16> = HashMap::new();
 
