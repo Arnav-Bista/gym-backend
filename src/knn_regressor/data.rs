@@ -3,7 +3,7 @@ use std::str::FromStr;
 use chrono::{Duration, NaiveDate};
 use serde::{Serialize,Deserialize};
 use serde_json::{self, Value};
-use tokio::fs;
+use tokio::{fs, sync::futures};
 
 use crate::{firebase::firebase::Firebase, core_functions::{uk_datetime_now, get_start_of_week, error_logger::error_logger}};
 
@@ -81,6 +81,10 @@ impl Data {
 
     fn get_vec_from_day(day_data: &Value) -> Vec<(u16,u16)> {
         let mut data: Vec<(u16,u16)> = Vec::new();
+        if day_data.is_null() {
+            println!("Unexpected Error - day_data is null - get_vec_from_day");
+            return Vec::new();
+        }
         for (key,val) in day_data.as_object().unwrap() {
             data.push((
                 key.parse().unwrap(),
