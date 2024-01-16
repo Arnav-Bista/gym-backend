@@ -63,6 +63,7 @@ impl Regressor {
 
         // Average Occupancy of k nearest
         let mut total: u16 = 0;
+
         for (neighbour, weight) in k_nearest.iter().zip(k_weights.iter()) {
             total += ((weight / total_weights) * neighbour.1 as f64) as u16;
         }
