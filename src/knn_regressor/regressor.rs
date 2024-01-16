@@ -40,8 +40,7 @@ impl Regressor {
             // And the distance away.
             // This will probably work best when the K used here greater than the number of weeks
             // of data available.
-            let weight: f64 = 1.0 / ((weeks_away + 1) as f64) + 1.0 / (distance + 1) as f64;
-            // println!("Weight: {}", weight);
+            let weight: f64 = 1.0 / ((weeks_away + 1) as f64) + 1.0 / distance as f64;
 
             // Fill before starting to swap
             if k_nearest.len() <= self.k {
@@ -65,8 +64,9 @@ impl Regressor {
         // Average Occupancy of k nearest
         let mut total: u16 = 0;
         for (neighbour, weight) in k_nearest.iter().zip(k_weights.iter()) {
-            total += ((weight / total_weights) * (neighbour.1 as f64)) as u16;
+            total += ((weight / total_weights) * neighbour.1 as f64) as u16;
         }
+
         total 
     }
 
