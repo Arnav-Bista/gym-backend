@@ -70,9 +70,11 @@ impl Regressor {
         // Weighted Average of K Nearest
         let total_weights: f64 = k_weights.iter().sum();
         let mut total: u16 = 0;
+
         for (neighbour, weight) in k_nearest.iter().zip(k_weights.iter()) {
             total += ((weight / total_weights) * (neighbour.1 as f64)) as u16;
         }
+
         total 
     }
 
