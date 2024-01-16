@@ -19,17 +19,22 @@ impl Regressor {
 
         for i in 0..item_count + 1 {
             let time = start + i * frequency;
+            // Minutes cannot be greater than 59 minutes
+            if time % 100 >= 60 {
+                continue;
+            }
             result.push((time, self.predict_one(week_day, time)));
         }
 
         result
     }
-        
-    pub fn predict_one(&self, week_day: usize, time: u16) -> u16 {
+     
+
+    pub fn predict_one(&self, weekday: usize, time: u16) -> u16 {
         // u16 limit is 65536
         let mut k_nearest: Vec<(u16,u16)> = Vec::with_capacity(self.k);
 
-        for day_data in &self.data.get_data()[week_day] {
+        for day_data in &self.data.get_data()[weekday] {
             if k_nearest.len() <= self.k {
                 k_nearest.push(*day_data);
                 continue;
