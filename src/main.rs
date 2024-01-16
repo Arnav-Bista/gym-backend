@@ -102,7 +102,9 @@ fn prepare_location(now: DateTime<Tz>) -> (String, String) {
 }
 
 async fn make_predictions(firebase: &Firebase, schedule: &Schedule, frequency: u64) {
-    let k = 3;
+    // SQRT((15 * 60) / 5) -> Sqrt of number of data points
+    // 8.9
+    let k = 9;
     let path = "knn_regressor.data";
 
     let now = uk_datetime_now::now();
