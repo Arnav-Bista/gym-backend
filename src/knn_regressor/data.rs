@@ -93,12 +93,6 @@ impl Data {
         }
         data
     }
-
-    /// Returns the past K weeks worth of data.
-    /// The K is specified at the time of creation of this Struct. Idependent of other modules.
-    ///
-    /// The first entry is last week.
-    /// The last entry is the data from K weeks ago.
     pub fn get_data(&self) -> &Vec<Vec<(u16,u16)>>{
         &self.data
     }
